@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+  <div id="app">
+
+  </div>
+</body>
+<script src="./vdom.js"></script>
+
+<script>
+  let vnode = createElement('ul', null, [
+    createElement('li', {class: 'a', key: 'a', style: {color: 'red'}}, 'APPLE'),
+    createElement('li', {class: 'a', key: 'b', style: {color: 'red'}}, 'BANANA'),
+    createElement('li', {class: 'a', key: 'c', '@click': () => {console.log('ORANGE')}}, 'ORANGE')
+  ])
+  render(vnode, document.querySelector('#app'))
+</script>
+</html>
