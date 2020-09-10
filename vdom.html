@@ -14,10 +14,24 @@
 
 <script>
   let vnode = createElement('ul', null, [
-    createElement('li', {class: 'a', key: 'a', style: {color: 'red'}}, 'APPLE'),
-    createElement('li', {class: 'a', key: 'b', style: {color: 'red'}}, 'BANANA'),
-    createElement('li', {class: 'a', key: 'c', '@click': () => {console.log('ORANGE')}}, 'ORANGE')
+    createElement('li', {class: 'a', key: 'a', style: {color: 'red'}}, [
+      createElement('span', null, 'APPLE')
+    ]),
+    createElement('li', {class: 'b', key: 'b', style: {color: 'green', 'font-size': '20px'}}, 'BANANA'),
+    createElement('li', {class: 'c', key: 'c', '@click': () => {console.log('ORANGE')}}, 'ORANGE')
   ])
   render(vnode, document.querySelector('#app'))
+
+  let newNode = createElement('ul', null, [
+    createElement('li', {class: 'a', key: 'a', style: {color: 'red'}}, [
+      createElement('span', null, 'APPLE')
+    ]),
+    createElement('li', {class: 'c2', key: 'c', style: {color: 'orange' },'@click': () => {console.log('ORANGE')}}, 'ORANGE'),
+    createElement('li', {class: 'c2', key: 'c', color: 'red'}, 'WATERMELON')
+  ])
+
+  setTimeout(() => {
+    render(newNode, document.querySelector('#app'))
+  }, 5000);
 </script>
 </html>

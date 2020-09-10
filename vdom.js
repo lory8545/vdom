@@ -24,9 +24,10 @@ function createElement (tag, data, children) {
     childrenType = CHILDREN_TYPE.EMPTY
   } else {
     childrenType = CHILDREN_TYPE.SINGLE
-    children = createTextNode(children + '')
+    children = [createTextNode(children + '')]
   }
   return {
+    tag,
     children,
     nodeType,
     data,
@@ -49,7 +50,7 @@ function createTextNode (txt) {
 function render(vnode, container) {
   const preNode = container.vnode
   if (preNode) {
-
+    patch(preNode, vnode, container)
   } else {
     mount(vnode, container)
   }
@@ -59,13 +60,54 @@ function render(vnode, container) {
 function mount(vnode, container) {
   let { nodeType } = vnode
   if (nodeType === NODE_TYPE.HTML) {
-
-  } else if (nodeType === NODE_TYPE.TEXT) {
-    renderTextNode(vnode, container)
+    renderHtmlNode(vnode, container)
+  } else {
+    renderTextNode(vnode.children, container)
   }
 }
 
-function renderTextNode(vnode, container) {
-  let textNode = document.createTextNode()
+function renderTextNode(txt, container) {
+  let textNode = document.createTextNode(txt)
   container.appendChild(textNode)
+}
+
+function renderHtmlNode (vnode, container) {
+  let { tag, children } = vnode
+  let node = document.createElement(tag)
+  vnode.data && bindAttr(node, vnode.data)
+  vnode.el = node
+  if (vnode.childrenType !== CHILDREN_TYPE.EMPTY) {
+    for (let i = 0;  i < children.length; i++) {
+      let { nodeType } = children[i]
+      if (nodeType === NODE_TYPE.TEXT) {
+        renderTextNode(children[i].children, node)
+      } else {
+        renderHtmlNode(children[i], node)
+      }
+    }
+  }
+  container.appendChild(node)
+}
+
+function bindAttr (node, data) {
+  Object.keys(data).forEach(item => {
+    if (item === 'class') {
+      node.className += data[item]
+    } else if (item === 'style') {
+      let keys =Object.keys(data[item])
+      let str = ''
+      for (let i = 0; i < keys.length; i++) {
+        str += `${keys[i]}: ${data[item][keys[i]]}; `
+      }
+      node.style.cssText += str
+    } else if (item.startsWith('@')) {
+      node.addEventListener(item.slice(1), data[item])
+    } else {
+      node.setAttribute(item, data[item])
+    }
+  })
+}
+
+function patch (oldNode, newNode, container) {
+  
 }
