@@ -20,6 +20,7 @@
     createElement('li', {class: 'b', key: 'b', style: {color: 'green', 'font-size': '20px'}}, 'BANANA'),
     createElement('li', {class: 'c', key: 'c', '@click': () => {console.log('ORANGE')}}, 'ORANGE')
   ])
+  // console.log(vnode)
   render(vnode, document.querySelector('#app'))
 
   let newNode = createElement('ul', null, [
@@ -27,7 +28,7 @@
       createElement('span', null, 'APPLE')
     ]),
     createElement('li', {class: 'c2', key: 'c', style: {color: 'orange' },'@click': () => {console.log('ORANGE')}}, 'ORANGE'),
-    createElement('li', {class: 'c2', key: 'c', color: 'red'}, 'WATERMELON')
+    createElement('li', {class: 'c2', key: 'c', style: {color: 'red' }}, 'WATERMELON')
   ])
 
   setTimeout(() => {

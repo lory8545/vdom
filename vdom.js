@@ -42,7 +42,7 @@ function createTextNode (txt) {
     nodeType: NODE_TYPE.TEXT,
     tag: null,
     data: null,
-    children: txt,
+    children: [txt],
     childrenType: CHILDREN_TYPE.EMPTY
   }
 }
@@ -62,7 +62,7 @@ function mount(vnode, container) {
   if (nodeType === NODE_TYPE.HTML) {
     renderHtmlNode(vnode, container)
   } else {
-    renderTextNode(vnode.children, container)
+    renderTextNode(vnode.children[0], container)
   }
 }
 
@@ -74,13 +74,17 @@ function renderTextNode(txt, container) {
 function renderHtmlNode (vnode, container) {
   let { tag, children } = vnode
   let node = document.createElement(tag)
-  vnode.data && bindAttr(node, vnode.data)
+  if (vnode.data) {
+    Object.keys(vnode.data).forEach(item => {
+      updateAttr(vnode.data[item], null, item, node)
+    })
+  }
   vnode.el = node
   if (vnode.childrenType !== CHILDREN_TYPE.EMPTY) {
     for (let i = 0;  i < children.length; i++) {
       let { nodeType } = children[i]
       if (nodeType === NODE_TYPE.TEXT) {
-        renderTextNode(children[i].children, node)
+        renderTextNode(children[i].children[0], node)
       } else {
         renderHtmlNode(children[i], node)
       }
@@ -89,25 +93,79 @@ function renderHtmlNode (vnode, container) {
   container.appendChild(node)
 }
 
-function bindAttr (node, data) {
-  Object.keys(data).forEach(item => {
-    if (item === 'class') {
-      node.className += data[item]
-    } else if (item === 'style') {
-      let keys =Object.keys(data[item])
-      let str = ''
-      for (let i = 0; i < keys.length; i++) {
-        str += `${keys[i]}: ${data[item][keys[i]]}; `
+function patch (oldNode, newNode, container) {
+  if (oldNode == newNode) {
+    return
+  }
+  const el = newNode.el = oldNode.el
+  patchData(newNode.data, oldNode.data, el)
+  if (newNode.nodeType === NODE_TYPE.TEXT) {
+    if (newNode.children[0] !== oldNode.children[0]) {
+      renderTextNode(newNode.children[0], container)
+    }
+  } else {
+    const [oldCh, ch] = [oldNode.children, newNode.children]
+    if (oldCh && ch) {
+      patchChildren(oldNode.childrenType, newNode.childrenType ,oldCh, ch, el)
+    } else if (oldCh) {
+      for (let i = 0; i <nodes.length; i++) {
+        container.removeChild(nodes[i].el)
       }
-      node.style.cssText += str
-    } else if (item.startsWith('@')) {
-      node.addEventListener(item.slice(1), data[item])
-    } else {
-      node.setAttribute(item, data[item])
+    } else if (ch) {
+      for (let i =0; i <nodes.length; i++) {
+        renderHtmlNode(nodes[i], container)
+      }
+    }
+  }
+}
+
+function patchData(newData, oldData, container) {
+  newData && Object.keys(newData).forEach(item => {
+    let [newAttr, oldAttr] = [newData[item], oldData ? oldData[item] : null]
+    if (newAttr !== oldAttr) {
+      updateAttr(newAttr, oldAttr, item, container)
+    }
+  })
+  oldData && Object.keys(oldData).forEach(item => {
+    if (oldData[item] && !newData[item]) {
+      updateAttr(null, oldData[item], item, container)
     }
   })
 }
 
-function patch (oldNode, newNode, container) {
+function updateAttr(newAttr, oldAttr, key, container) {
+  if (key === 'class') {
+    container.className = newAttr || ''
+  } else if (key === 'style') {
+    if (newAttr) {
+      Object.keys(newAttr).forEach(item => {
+        if (!oldAttr || newAttr[item] !== oldAttr[item]) {
+          container.style[item] = newAttr[item]
+        }
+      })
+      oldAttr && Object.keys[oldAttr].forEach(item => {
+        if (!newAttr[item]) {
+          container.style[item] = ''
+        }
+      })
+    } else {
+      container.style.cssText = ''
+    }
+  } else if (key.startsWith('@')) {
+    if (newAttr) {
+      container.addEventListener(key.slice(1), newAttr)
+    } else {
+      container.removeEventListener(key.slice(1), oldAttr)
+    }
+  } else {
+    if (newAttr) {
+      container.setAttribute(key, newAttr)
+    } else {
+      container.removeAttribute(key)
+    }
+  }
+}
+
+function patchChildren (oldChildrenType, newChildrenType, oldChildren, newChildren, el) {
   
 }
