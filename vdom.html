@@ -15,24 +15,25 @@
 <script>
   let vnode = createElement('ul', null, [
     createElement('li', {class: 'a', key: 'a', style: {color: 'red'}}, [
-      createElement('span', null, 'APPLE')
+      createElement('span', null, 'AAAA')
     ]),
-    createElement('li', {class: 'b', key: 'b', style: {color: 'green', 'font-size': '20px'}}, 'BANANA'),
-    createElement('li', {class: 'c', key: 'c', '@click': () => {console.log('ORANGE')}}, 'ORANGE')
+    createElement('li', {class: 'b', key: 'b', style: {color: 'green', 'font-size': '20px'}}, 'BBBB'),
+    createElement('li', {class: 'c', key: 'c', '@click': () => {console.log('ORANGE')}}, 'CCCC')
   ])
-  // console.log(vnode)
   render(vnode, document.querySelector('#app'))
 
-  let newNode = createElement('ul', null, [
-    createElement('li', {class: 'a', key: 'a', style: {color: 'red'}}, [
-      createElement('span', null, 'APPLE')
-    ]),
-    createElement('li', {class: 'c2', key: 'c', style: {color: 'orange' },'@click': () => {console.log('ORANGE')}}, 'ORANGE'),
-    createElement('li', {class: 'c2', key: 'c', style: {color: 'red' }}, 'WATERMELON')
+  let newNode = createElement('span', null, [
+    createElement('span', {class: 'o', key: '0', style: {color: 'red' }}, '00000'),
+    /*createElement('li', {class: 'a', key: 'a', style: {color: 'red', 'background-color': 'aliceblue'}}, [
+      createElement('span', null, 'AAAA')
+    ]),*/
+    createElement('span', {class: 'd2', key: 'd', style: {color: 'red' }}, 'DDDD'),
+    createElement('span', {class: 'c2', key: 'c', style: {color: 'orange' },'@click': () => {console.log('ORANGE')}}, 'CCCC'),
+    createElement('span', {class: 'b2', key: 'b', style: {color: 'green', 'font-size': '20px'}}, 'BBBB')
   ])
 
   setTimeout(() => {
     render(newNode, document.querySelector('#app'))
-  }, 5000);
+  }, 2000);
 </script>
 </html>

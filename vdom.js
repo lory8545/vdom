@@ -57,21 +57,22 @@ function render(vnode, container) {
   container.vnode = vnode
 }
 
-function mount(vnode, container) {
+function mount(vnode, container, node) {
   let { nodeType } = vnode
   if (nodeType === NODE_TYPE.HTML) {
-    renderHtmlNode(vnode, container)
+    renderHtmlNode(vnode, container, node)
   } else {
-    renderTextNode(vnode.children[0], container)
+    renderTextNode(vnode.children[0], container, node)
   }
 }
 
 function renderTextNode(txt, container) {
-  let textNode = document.createTextNode(txt)
-  container.appendChild(textNode)
+  //let textNode = document.createTextNode(txt)
+  //container.appendChild(textNode)
+  container.innerText = txt
 }
 
-function renderHtmlNode (vnode, container) {
+function renderHtmlNode (vnode, container, refNode) {
   let { tag, children } = vnode
   let node = document.createElement(tag)
   if (vnode.data) {
@@ -90,33 +91,40 @@ function renderHtmlNode (vnode, container) {
       }
     }
   }
-  container.appendChild(node)
+  refNode ? container.insertBefore(node, refNode) : container.appendChild(node)
 }
 
 function patch (oldNode, newNode, container) {
   if (oldNode == newNode) {
     return
   }
-  const el = newNode.el = oldNode.el
-  patchData(newNode.data, oldNode.data, el)
-  if (newNode.nodeType === NODE_TYPE.TEXT) {
-    if (newNode.children[0] !== oldNode.children[0]) {
-      renderTextNode(newNode.children[0], container)
-    }
+  if (newNode.nodeType !== oldNode.nodeType) {
+    replaceNode(newNode, oldNode, container)
+  }else if (newNode.nodeType === NODE_TYPE.TEXT) {
+    patchText(newNode, oldNode, container)
   } else {
-    const [oldCh, ch] = [oldNode.children, newNode.children]
-    if (oldCh && ch) {
-      patchChildren(oldNode.childrenType, newNode.childrenType ,oldCh, ch, el)
-    } else if (oldCh) {
-      for (let i = 0; i <nodes.length; i++) {
-        container.removeChild(nodes[i].el)
-      }
-    } else if (ch) {
-      for (let i =0; i <nodes.length; i++) {
-        renderHtmlNode(nodes[i], container)
-      }
-    }
+    patchElement(newNode, oldNode, container)
   }
+}
+
+function replaceNode(newNode, oldNode, el) {
+  el.removeChild(oldNode.el)
+  mount(newNode, el)
+}
+
+function patchText(newNode, oldNode, el) {
+  if (newNode.children[0] !== oldNode.children[0]) {
+    renderTextNode(newNode.children[0], el)
+  }
+}
+
+function patchElement(newNode, oldNode, el) {
+  if (newNode.tag !== oldNode.tag) {
+    replaceNode(newNode, oldNode, el)
+    return
+  }
+  patchData(newNode.data, oldNode.data, el)
+  patchChildren(newNode.children, oldNode.children, oldNode.el)
 }
 
 function patchData(newData, oldData, container) {
@@ -143,7 +151,7 @@ function updateAttr(newAttr, oldAttr, key, container) {
           container.style[item] = newAttr[item]
         }
       })
-      oldAttr && Object.keys[oldAttr].forEach(item => {
+      oldAttr && Object.keys(oldAttr).forEach(item => {
         if (!newAttr[item]) {
           container.style[item] = ''
         }
@@ -152,10 +160,9 @@ function updateAttr(newAttr, oldAttr, key, container) {
       container.style.cssText = ''
     }
   } else if (key.startsWith('@')) {
+    container.removeEventListener(key.slice(1), oldAttr)
     if (newAttr) {
       container.addEventListener(key.slice(1), newAttr)
-    } else {
-      container.removeEventListener(key.slice(1), oldAttr)
     }
   } else {
     if (newAttr) {
@@ -166,6 +173,35 @@ function updateAttr(newAttr, oldAttr, key, container) {
   }
 }
 
-function patchChildren (oldChildrenType, newChildrenType, oldChildren, newChildren, el) {
-  
+function patchChildren (newChildren, oldChildren, el) {
+  let index = 0
+  // 123 old
+  // 213
+  for (let i = 0; i < newChildren.length; i++) {
+    let node = newChildren[i]
+    let oldNodeIndex = oldChildren.findIndex(item => item.key === node.key)
+    if (oldNodeIndex >= 0) { // 存在节点 更新节点
+      if (node.tag === oldChildren[oldNodeIndex].tag) {
+        node.el = oldChildren[oldNodeIndex].el
+        if (oldNodeIndex < index) { // 挪动节点
+          const refNode = newChildren[i - 1].el.nextSibling
+          el.insertBefore(oldChildren[oldNodeIndex].el, refNode)
+        }
+        index = oldNodeIndex
+      } else {
+        replaceNode(node, oldChildren[oldNodeIndex] ,el)
+      }
+      patch(oldChildren[oldNodeIndex], node, oldChildren[oldNodeIndex].el || el)
+    } else { // 新增节点
+      const refNode = i - 1 < 0 ? oldChildren[0].el : newChildren[i - 1].el.nextSibling
+      mount(node, el, refNode)
+    }
+  }
+  for(let i = 0; i < oldChildren.length; i++) { // 旧节点有 新节点没有
+    let oldNode = oldChildren[i]
+    let has = newChildren.find(item => item.key === oldNode.key) 
+    if (!has) {
+      el.removeChild(oldNode.el)
+    }
+  }
 }
